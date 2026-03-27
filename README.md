@@ -1,134 +1,46 @@
-# Delayed Mirror — iOS App
+# Delayed Mirror
 
-A live camera feed that plays back what the camera captured **N seconds ago**
-(1 – 30 s, adjustable in real time). Supports pinch-to-zoom and a zoom slider.
-No video is saved to disk.
+**See yourself a few seconds in the past.** Delayed Mirror shows a live camera feed played back with an adjustable time delay — from 1 second up to 30 seconds. No recording, no saving, just a real-time window into the recent past.
 
 ---
 
-## Files
+## What it does
 
-| File | Purpose |
-|------|---------|
-| `DelayedMirrorApp.swift` | `@main` entry point |
-| `CameraManager.swift` | AVFoundation capture, JPEG ring buffer, zoom control |
-| `CameraPreviewView.swift` | `UIViewRepresentable` + `CADisplayLink` renderer |
-| `ContentView.swift` | SwiftUI UI — delay slider, zoom panel, buffering indicator |
-| `InfoPlist.snippet.xml` | Camera permission key to paste into `Info.plist` |
+Point your iPhone or iPad at anything and watch it play back on a slight delay. Useful for:
 
----
-
-## Create the Xcode Project (step by step)
-
-### 1  New project
-
-1. Open **Xcode** (16.x recommended; minimum 15.x).
-2. **File → New → Project…**
-3. Choose **iOS → App** and click **Next**.
-4. Fill in:
-   - **Product Name**: `DelayedMirror`
-   - **Team**: your Apple Developer team (free or paid)
-   - **Bundle Identifier**: e.g. `com.yourname.DelayedMirror`
-   - **Interface**: **SwiftUI**
-   - **Language**: **Swift**
-   - Uncheck *Include Tests* (optional)
-5. Click **Next**, choose a save location, **Create**.
-
-### 2  Replace / add source files
-
-Xcode creates a default `ContentView.swift` and an app file.
-
-1. **Delete** the default `ContentView.swift` and the default app entry file
-   (e.g. `DelayedMirrorApp.swift` or whatever Xcode named it).
-2. Drag the four Swift files from this folder into the **project navigator**
-   under the `DelayedMirror` group:
-   - `DelayedMirrorApp.swift`
-   - `CameraManager.swift`
-   - `CameraPreviewView.swift`
-   - `ContentView.swift`
-3. In the sheet that appears, make sure **"Copy items if needed"** is checked
-   and the app target is selected. Click **Finish**.
-
-### 3  Add the camera permission key
-
-1. In the project navigator, click **Info.plist** (or select your app target →
-   **Info** tab).
-2. Add a new row:
-   - **Key**: `Privacy - Camera Usage Description`
-   - **Value**: `Delayed Mirror uses the camera to display a live delayed preview.`
-
-   Alternatively, open `Info.plist` as source and paste the contents of
-   `InfoPlist.snippet.xml` inside the root `<dict>`.
-
-### 4  Deployment target
-
-1. Select the project in the navigator → your app **Target** → **General**.
-2. Set **Minimum Deployments** to **iOS 16.0** (or higher).
-
-### 5  Capabilities (no extras needed)
-
-The app uses only the camera. No special capabilities (HealthKit, Push, etc.)
-are required beyond the `NSCameraUsageDescription` key.
-
-### 6  Run on a real device
-
-> **The camera does not work in the iOS Simulator.**
-> You must run on a physical iPhone or iPad.
-
-1. Connect your device via USB (or use wireless pairing).
-2. Select your device in the Xcode toolbar.
-3. Press **⌘R** (or the ▶ button).
-4. On first run, trust the developer profile on the device:
-   **Settings → General → VPN & Device Management → your team → Trust**.
+- **Checking your form** — watch your golf swing, yoga pose, or pitch delivery a few seconds after you do it, without needing a second person
+- **Dance and movement practice** — see yourself move with a delay that matches how an audience would perceive you
+- **Speech and presentation rehearsal** — observe your body language and expressions right after you speak
+- **Just messing around** — it's genuinely disorienting and fun
 
 ---
 
-## How it works
+## How to use it
 
-```
-AVCaptureVideoDataOutput  (30 fps, 720p, BGRA)
-        │
-        ▼
-   captureQueue (serial)
-        │
-   CIContext (Metal)         ← GPU-accelerated pixel-buffer → CGImage
-        │
-   UIImage.jpegData(0.75)    ← ~60–120 KB per frame
-        │
-   ringBuffer [(timestamp, Data)]
-        │   ← pruned to last 33 s (~1000 frames ≈ 60–120 MB peak)
-        │
-   CADisplayLink (30 fps, main thread)
-        │
-   decodeQueue (concurrent)  ← UIImage(data:) off the main thread
-        │
-   UIImageView.image          ← CATransaction with animations disabled
-```
+**Set the delay**
+Use the slider at the bottom of the screen. Drag left for a shorter delay (minimum 1 second) or right for a longer one (maximum 30 seconds). The current delay is shown in the top-right corner of the slider bar.
 
-**Delay logic**: on each display-link tick, the manager binary-searches the
-ring buffer for the entry whose timestamp is closest to
-`CACurrentMediaTime() - delay`. This gives sub-frame accuracy with O(log n)
-lookup.
+**Zoom in or out**
+You can zoom two ways:
+- **Pinch** anywhere on the video with two fingers to zoom in or out
+- Tap the **Zoom** button at the bottom to reveal a slider for more precise control
 
-**Memory**: at 30 fps × 30 s × ~90 KB/frame ≈ **81 MB** worst-case. The ring
-is capped at 33 s and frames older than that are pruned on every capture.
+**Buffering**
+When you first open the app — or after changing to a longer delay — you'll see a small "Buffering…" spinner in the top center. This just means the app is filling up its memory buffer. It disappears automatically once there's enough recorded footage for your chosen delay.
 
----
-
-## Customisation
-
-| What | Where | How |
-|------|-------|-----|
-| Capture resolution | `CameraManager.setupCaptureSession()` | Change `sessionPreset` (e.g. `.vga640x480` saves more RAM) |
-| JPEG quality | `CameraManager.jpegQuality` | 0.6 – 0.9 trades quality for memory |
-| Max delay | `ContentView` Slider range + `CameraManager.maxBufferDuration` | Increase both; watch RAM usage |
-| Front camera | `setupCaptureSession()` | Change `position: .back` to `.front` |
-| Landscape support | `CameraPreviewViewController.viewDidLoad` + `CameraManager.setupCaptureSession` | Observe `UIDevice.orientationDidChangeNotification` and update `connection.videoOrientation` |
+**Going to the background**
+The camera pauses automatically when you switch to another app or lock your screen, and resumes when you come back.
 
 ---
 
 ## Requirements
 
-- iOS 16.0+
-- iPhone or iPad with a rear camera
-- Xcode 15+ / Swift 5.9+
+- iPhone or iPad running **iOS 16** or later
+- A rear camera (all iPhones and iPads qualify)
+- Camera permission (the app will ask on first launch)
+
+---
+
+## Privacy
+
+Delayed Mirror never saves any video or photos to your device. Everything stays in memory and is discarded the moment you close the app.
