@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  InfoPlist.snippet.xml
+  ─────────────────────
+  Add these keys to your project's Info.plist.
+
+  In Xcode 15+:
+    1. Select your app target → Info tab
+    2. Click "+" at the end of any row to add a new key
+    3. Type "Privacy - Camera Usage Description"
+    4. Set the value string to whatever you prefer (example below)
+
+  Or paste the raw XML keys directly inside the <dict> of Info.plist.
+-->
+
+<!-- Paste between the outermost <dict> … </dict> tags in Info.plist -->
+<key>NSCameraUsageDescription</key>
+<string>Delayed Mirror uses the camera to display a live video feed with an adjustable time delay.</string>

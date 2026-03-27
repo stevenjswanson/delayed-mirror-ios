@@ -1,0 +1,59 @@
+name: DelayedMirror
+
+options:
+  bundleIdPrefix: com.delayedmirror
+  deploymentTarget:
+    iOS: "16.0"
+  defaultConfig: Debug
+  xcodeVersion: "16.0"
+  generateEmptyDirectories: true
+
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    TARGETED_DEVICE_FAMILY: "1,2"   # iPhone + iPad
+    MARKETING_VERSION: "1.0"
+    CURRENT_PROJECT_VERSION: "1"
+
+targets:
+  DelayedMirror:
+    type: application
+    platform: iOS
+    deploymentTarget: "16.0"
+
+    sources:
+      - path: Sources
+        excludes:
+          - "Info.plist"
+
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.delayedmirror.app
+        INFOPLIST_FILE: Sources/Info.plist
+        ENABLE_PREVIEWS: YES
+        DEBUG_INFORMATION_FORMAT: dwarf-with-dsym
+
+    info:
+      path: Sources/Info.plist
+      properties:
+        CFBundleDisplayName: Delayed Mirror
+        NSCameraUsageDescription: "Delayed Mirror uses the camera to display a live video feed with an adjustable time delay."
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+        UILaunchScreen:
+          UIColorName: ""
+        UIRequiredDeviceCapabilities:
+          - armv7
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+        UISupportedInterfaceOrientations~ipad:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+
+configs:
+  Debug:
+    type: debug
+  Release:
+    type: release
